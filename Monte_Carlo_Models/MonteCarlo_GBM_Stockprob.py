@@ -6,7 +6,7 @@ from tqdm import tqdm
 # -------------------------------
 # PARAMETERS
 # -------------------------------
-tickers = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA", "JPM", "V", "XOM"]  # Example — can extend to 100
+tickers = ["SPY", "QQQ", "DIA"]
 n_simulations = 10000
 n_days = 252
 

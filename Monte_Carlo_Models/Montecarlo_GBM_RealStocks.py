@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Fetch historical data for Apple (AAPL)
-ticker = "RGC"
+ticker = "NVDA"
 data = yf.download(ticker, period="1y", interval="1d")
 
 # Calculate daily returns

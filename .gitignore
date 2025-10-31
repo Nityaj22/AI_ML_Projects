@@ -1,17 +1,5 @@
-# Python
+﻿.venv/
+**/data/
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-env/
-venv/
-*.env
-
-# VS Code
-.vscode/
-
-# Jupyter
 .ipynb_checkpoints/
-
-# Any other local files
 .DS_Store
