@@ -9,10 +9,10 @@ SessionKind = Literal["FP1", "FP2", "FP3", "Q", "R"]
 
 
 def main(
-	season: int = 2023,
-	gp_name: str = "Bahrain Grand Prix",
+	season: int = 2025,
+	gp_name: str = "Azerbaijan Grand Prix",
 	sessions: list[SessionKind] | None = None,
-	cache_dir: Path | None = Path("f1_undercut/data"),
+	cache_dir: Path | None = Path("data"),
 ) -> None:
 	"""Parameterized entry point to cache one GP's sessions."""
 	ensure_cache_dir(cache_dir)

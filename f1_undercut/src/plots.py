@@ -1,6 +1,7 @@
 """Plotting utilities for EDA (signatures only)."""
 
 import pandas as pd
+import numpy as np
 from typing import Optional
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -47,4 +48,27 @@ def plot_pit_timeline(pit_events: pd.DataFrame):
 	plt.figure(figsize=(9,5))
 	sns.stripplot(data=pit_events, x="LapNumber", y="Driver", hue="Compound" if "Compound" in pit_events.columns else None, dodge=True)
 	plt.title("Pit Stop Timeline")
+	plt.tight_layout()
+
+def plot_stint_degradation(df: pd.DataFrame):
+	# 5) Aggregate median and IQR per compound and stint-lap
+	grp = (
+		df.groupby(["Compound", "StintLap"])["LapTime_s"]
+		.agg(median="median", p25=lambda x: np.percentile(x, 25), p75=lambda x: np.percentile(x, 75))
+		.reset_index()
+	)
+
+	plt.figure(figsize=(10, 6))
+	compounds = grp["Compound"].unique().tolist()
+	palette = sns.color_palette("tab10", n_colors=len(compounds))
+
+	for color, compound in zip(palette, compounds):
+		sub = grp[grp["Compound"] == compound]
+		plt.plot(sub["StintLap"], sub["median"], label=compound, color=color, linewidth=2)
+		plt.fill_between(sub["StintLap"], sub["p25"], sub["p75"], color=color, alpha=0.2)
+
+	plt.xlabel("Stint Lap (index within stint)")
+	plt.ylabel("Lap Time (s)")
+	plt.title("Stint Degradation by Compound (median with IQR)")
+	plt.legend(title="Compound")
 	plt.tight_layout()
