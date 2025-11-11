@@ -72,3 +72,199 @@ def plot_stint_degradation(df: pd.DataFrame):
 	plt.title("Stint Degradation by Compound (median with IQR)")
 	plt.legend(title="Compound")
 	plt.tight_layout()
+
+
+def plot_undercut_success_breakdown(labeled_attempts: pd.DataFrame, save_path: Optional[str] = None) -> None:
+    """Plot pie chart showing success vs failure breakdown."""
+    success_count = labeled_attempts['undercut_success'].sum()
+    failure_count = len(labeled_attempts) - success_count
+    
+    plt.figure(figsize=(8, 6))
+    plt.pie([failure_count, success_count], 
+            labels=['Failed', 'Successful'],
+            autopct='%1.1f%%',
+            colors=['#ff6b6b', '#51cf66'],
+            startangle=90)
+    plt.title(f"Undercut Attempts: Success vs Failure\nTotal: {len(labeled_attempts)} attempts")
+    plt.tight_layout()
+    
+    if save_path:
+        plt.savefig(save_path, dpi=150)
+        plt.close()
+    else:
+        plt.show()
+
+
+def plot_undercut_timeline(labeled_attempts: pd.DataFrame, save_path: Optional[str] = None) -> None:
+    """Plot timeline of undercut attempts showing success/failure over race."""
+    plt.figure(figsize=(12, 6))
+    
+    # Separate success and failure
+    success_attempts = labeled_attempts[labeled_attempts['undercut_success'] == 1]
+    failure_attempts = labeled_attempts[labeled_attempts['undercut_success'] == 0]
+    
+    # Plot failures
+    if not failure_attempts.empty:
+        plt.scatter(failure_attempts['pit_lap'], failure_attempts['position_before'], 
+                   c='#ff6b6b', marker='x', s=100, alpha=0.7, label='Failure')
+    
+    # Plot successes
+    if not success_attempts.empty:
+        plt.scatter(success_attempts['pit_lap'], success_attempts['position_before'], 
+                   c='#51cf66', marker='o', s=100, alpha=0.7, label='Success')
+    
+    plt.xlabel("Lap Number")
+    plt.ylabel("Position Before Pit")
+    plt.title("Undercut Attempts Timeline\n(Green circles = Success, Red X = Failure)")
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    
+    if save_path:
+        plt.savefig(save_path, dpi=150)
+        plt.close()
+    else:
+        plt.show()
+
+
+def plot_undercut_by_compound(labeled_attempts: pd.DataFrame, laps: pd.DataFrame, save_path: Optional[str] = None) -> None:
+    """Plot success rate by compound change type."""
+    # Get compound changes
+    from src.features import compute_compound_change
+    compound_changes = compute_compound_change(labeled_attempts, laps)
+    
+    df = pd.DataFrame({
+        'compound_change': compound_changes,
+        'success': labeled_attempts['undercut_success']
+    })
+    
+    # Calculate success rate per compound change
+    success_rates = df.groupby('compound_change')['success'].agg(['mean', 'count'])
+    success_rates = success_rates[success_rates['count'] >= 1]  # Only show if at least 1 attempt
+    
+    if success_rates.empty:
+        plt.figure(figsize=(8, 6))
+        plt.text(0.5, 0.5, "No compound change data available", ha="center", va="center")
+        plt.axis("off")
+        if save_path:
+            plt.savefig(save_path, dpi=150)
+            plt.close()
+        return
+    
+    plt.figure(figsize=(10, 6))
+    bars = plt.bar(range(len(success_rates)), success_rates['mean'], 
+                   color=['#51cf66' if x > 0.5 else '#ff6b6b' for x in success_rates['mean']])
+    plt.xticks(range(len(success_rates)), success_rates.index, rotation=45, ha='right')
+    plt.ylabel("Success Rate")
+    plt.title("Undercut Success Rate by Compound Change")
+    plt.ylim(0, 1)
+    
+    # Add count labels on bars
+    for i, (rate, count) in enumerate(zip(success_rates['mean'], success_rates['count'])):
+        plt.text(i, rate + 0.02, f'n={int(count)}', ha='center', va='bottom')
+    
+    plt.tight_layout()
+    
+    if save_path:
+        plt.savefig(save_path, dpi=150)
+        plt.close()
+    else:
+        plt.show()
+
+
+def plot_undercut_scatter(labeled_attempts: pd.DataFrame, laps: pd.DataFrame, save_path: Optional[str] = None) -> None:
+    """Scatter plot: gap vs tyre age, colored by success."""
+    from src.features import compute_pre_pit_gap, compute_tyre_age
+    
+    gaps = compute_pre_pit_gap(labeled_attempts, laps)
+    ages = compute_tyre_age(labeled_attempts, laps)
+    
+    df = pd.DataFrame({
+        'gap': gaps,
+        'tyre_age': ages,
+        'success': labeled_attempts['undercut_success']
+    })
+    df = df.dropna()
+    
+    if df.empty:
+        plt.figure(figsize=(8, 6))
+        plt.text(0.5, 0.5, "No data available", ha="center", va="center")
+        plt.axis("off")
+        if save_path:
+            plt.savefig(save_path, dpi=150)
+            plt.close()
+        return
+    
+    plt.figure(figsize=(10, 6))
+    success_df = df[df['success'] == 1]
+    failure_df = df[df['success'] == 0]
+    
+    if not success_df.empty:
+        plt.scatter(success_df['gap'], success_df['tyre_age'], 
+                   c='#51cf66', marker='o', s=100, alpha=0.7, label='Success')
+    if not failure_df.empty:
+        plt.scatter(failure_df['gap'], failure_df['tyre_age'], 
+                   c='#ff6b6b', marker='x', s=100, alpha=0.7, label='Failure')
+    
+    plt.xlabel("Pre-Pit Gap (seconds)")
+    plt.ylabel("Tyre Age (laps)")
+    plt.title("Undercut Attempts: Gap vs Tyre Age")
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    
+    if save_path:
+        plt.savefig(save_path, dpi=150)
+        plt.close()
+    else:
+        plt.show()
+
+
+def plot_undercut_heatmap(
+    labeled_attempts: pd.DataFrame,
+    laps: pd.DataFrame,
+    save_path: Optional[str] = None
+) -> None:
+    """Plot heatmap of undercut success rate vs pre-pit gap × tyre age."""
+    from src.features import compute_pre_pit_gap, compute_tyre_age
+    
+    gaps = compute_pre_pit_gap(labeled_attempts, laps)
+    ages = compute_tyre_age(labeled_attempts, laps)
+    
+    df = pd.DataFrame({
+        "pre_pit_gap": gaps,
+        "tyre_age": ages,
+        "success": labeled_attempts["undercut_success"]
+    })
+    
+    df = df.dropna()
+    
+    if df.empty:
+        plt.figure(figsize=(8, 6))
+        plt.text(0.5, 0.5, "No data available for heatmap", ha="center", va="center")
+        plt.axis("off")
+        if save_path:
+            plt.savefig(save_path, dpi=150)
+            plt.close()
+        return
+    
+    # Create bins
+    gap_bins = pd.cut(df["pre_pit_gap"], bins=5, labels=["0-1s", "1-2s", "2-3s", "3-4s", "4+ s"])
+    age_bins = pd.cut(df["tyre_age"], bins=5, labels=["0-5", "5-10", "10-15", "15-20", "20+"])
+    
+    # Compute success rate per bin
+    heatmap_data = df.groupby([gap_bins, age_bins], observed=False)["success"].mean().unstack(fill_value=0)
+    
+    # Plot heatmap
+    plt.figure(figsize=(10, 6))
+    sns.heatmap(heatmap_data, annot=True, fmt=".2%", cmap="YlOrRd", cbar_kws={"label": "Success Rate"})
+    plt.xlabel("Tyre Age (laps)")
+    plt.ylabel("Pre-Pit Gap (seconds)")
+    plt.title("Undercut Success Rate Heatmap")
+    plt.tight_layout()
+    
+    if save_path:
+        plt.savefig(save_path, dpi=150)
+        plt.close()
+    else:
+        plt.show()

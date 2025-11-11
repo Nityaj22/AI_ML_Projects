@@ -10,7 +10,7 @@ SessionKind = Literal["FP1", "FP2", "FP3", "Q", "R"]
 
 def main(
 	season: int = 2025,
-	gp_name: str = "Azerbaijan Grand Prix",
+	gp_name: str = "Brazilian Grand Prix",
 	sessions: list[SessionKind] | None = None,
 	cache_dir: Path | None = Path("data"),
 ) -> None:

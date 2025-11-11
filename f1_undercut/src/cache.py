@@ -18,6 +18,6 @@ def ensure_cache_dir(cache_dir: Path) -> None:
 def clear_cache(cache_dir: Path, season: Optional[int] = None) -> None:
 	"""Optionally clear cached data (entire cache or for a season)."""
 	if cache_dir.exists():
-		raise RuntimeError("Clear not implemented to avaoid accidental deletion.")
+		raise RuntimeError("Clear not implemented to avoid accidental deletion.")
 
 
