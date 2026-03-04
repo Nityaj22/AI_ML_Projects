@@ -68,12 +68,11 @@ print(f"Date range: {combined.index[0].date()} to {combined.index[-1].date()}")
 print(f"Missing values:\n{combined.isnull().sum()}")
 
 # ── 5. SAVE TO CSV ───────────────────────────────────────────────────────────
+os.makedirs(r"W:\AI_ML_Projects\Macro_Regime\data\raw", exist_ok=True)
 
-os.makedirs("data/raw", exist_ok=True)
-
-macro_df.to_csv("data/raw/macro_indicators.csv")
-equity_returns.to_csv("data/raw/equity_returns.csv")
-combined.to_csv("data/raw/combined.csv")
+macro_df.to_csv(r"W:\AI_ML_Projects\Macro_Regime\data\raw\macro_indicators.csv")
+equity_returns.to_csv(r"W:\AI_ML_Projects\Macro_Regime\data\raw\equity_returns.csv")
+combined.to_csv(r"W:\AI_ML_Projects\Macro_Regime\data\raw\combined.csv")
 
 print("\nSaved:")
 print("  data/raw/macro_indicators.csv")
